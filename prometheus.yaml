@@ -1,0 +1,90 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: federated-prometheus
+  labels:
+    prometheus: federated-prometheus
+  namespace: thanos
+spec:
+  podMetadata:
+    labels:
+      thanos-peer: 'true'
+  replicas: 2
+  version: v2.7.1
+  serviceAccountName: prometheus-k8s
+  serviceMonitorSelector:
+    matchLabels:
+      app: federated-monitor
+  configMaps:
+  - serving-certs-ca-bundle
+  thanos:  
+    baseImage: improbable/thanos
+    peers: thanos-peers.thanos.svc:10900
+    s3:
+      accessKey: 
+        key: access
+        name: prometheus-thanos-auth
+      bucket: thanos-storage
+      endpoint: s3.amazonaws.com
+      secretKey:
+        key: secret
+        name: prometheus-thanos-auth
+  containers:
+  - args:
+    - -provider=openshift
+    - -https-address=:9091
+    - -http-address=
+    - -email-domain=*
+    - -upstream=http://localhost:9090
+    - -openshift-service-account=prometheus-k8s
+    - '-openshift-sar={"resource": "namespaces", "verb": "get"}'
+    - -tls-cert=/etc/tls/private/tls.crt
+    - -tls-key=/etc/tls/private/tls.key
+    - -cookie-secret-file=/etc/proxy/secrets/session_secret
+    - -skip-auth-regex=^/metrics
+    image: quay.io/openshift/origin-oauth-proxy:4.1
+    name: oauth-proxy
+    ports:
+    - containerPort: 9091
+      name: web-proxy
+    volumeMounts:
+    - mountPath: /etc/tls/private
+      name: secret-prometheus-k8s-tls
+    - mountPath: /etc/proxy/secrets
+      name: secret-prometheus-k8s-proxy
+  secrets:
+    - prometheus-k8s-tls
+    - prometheus-k8s-proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.openshift.io/serving-cert-secret-name: prometheus-k8s-tls
+  labels:
+    prometheus: federated-prometheus
+  name: prometheus-k8s
+spec:
+  ports:
+  - name: web-proxy
+    port: 9091
+    protocol: TCP
+    targetPort: web-proxy
+  selector:
+    app: prometheus
+    prometheus: federated-prometheus
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-peers
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: cluster
+    port: 10900
+    targetPort: cluster
+  selector:
+    thanos-peer: "true"
