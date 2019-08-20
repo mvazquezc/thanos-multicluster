@@ -9,6 +9,11 @@ spec:
   replicas: 2
   version: v2.8.0
   serviceAccountName: prometheus-k8s
+  remoteWrite:
+    - url: "https://<THANOS_RECEIVE_HOSTNAME>/api/v1/receive"
+      bearerTokenFile: /etc/prometheus/secrets/metrics-bearer-token/metrics_bearer_token
+      tlsConfig:
+        insecureSkipVerify: true
   serviceMonitorSelector:
     matchLabels:
       app: federated-monitor
@@ -38,6 +43,7 @@ spec:
     - mountPath: /etc/proxy/secrets
       name: secret-prometheus-k8s-proxy
   secrets:
+    - metrics-bearer-token
     - prometheus-k8s-tls
     - prometheus-k8s-proxy
 ---
