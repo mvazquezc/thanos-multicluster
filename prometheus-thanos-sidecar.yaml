@@ -6,14 +6,29 @@ metadata:
     prometheus: federated-prometheus
   namespace: thanos
 spec:
+  podMetadata:
+    labels:
+      thanos-peer: 'true'
   replicas: 2
-  version: v2.8.0
+  version: v2.7.1
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchLabels:
       app: federated-monitor
   configMaps:
   - serving-certs-ca-bundle
+  thanos:  
+    baseImage: improbable/thanos
+    peers: thanos-peers.thanos.svc:10900
+    s3:
+      accessKey: 
+        key: access
+        name: prometheus-thanos-auth
+      bucket: thanos-storage
+      endpoint: s3.amazonaws.com
+      secretKey:
+        key: secret
+        name: prometheus-thanos-auth
   containers:
   - args:
     - -provider=openshift
@@ -59,3 +74,17 @@ spec:
     app: prometheus
     prometheus: federated-prometheus
   type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: thanos-peers
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: cluster
+    port: 10900
+    targetPort: cluster
+  selector:
+    thanos-peer: "true"
