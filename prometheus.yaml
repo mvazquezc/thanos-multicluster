@@ -10,7 +10,7 @@ spec:
     labels:
       thanos-peer: 'true'
   replicas: 2
-  version: v2.7.1
+  version: v2.8.0
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchLabels:
