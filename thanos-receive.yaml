@@ -41,7 +41,7 @@ spec:
         - mountPath: /etc/proxy/secrets
           name: secret-thanos-receive-proxy
       - name: thanos-receive
-        image: improbable/thanos:v0.5.0
+        image: quay.io/thanos/thanos:v0.8.1
         args:
         - receive
         - --tsdb.path=/data/remote-write-receive-data

@@ -18,7 +18,7 @@ spec:
   configMaps:
   - serving-certs-ca-bundle
   thanos:  
-    baseImage: improbable/thanos
+    baseImage: quay.io/thanos/thanos:v0.8.1
     peers: thanos-peers.thanos.svc:10900
     s3:
       accessKey: 

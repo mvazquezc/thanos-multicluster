@@ -19,7 +19,7 @@ spec:
       serviceAccountName: thanos-store-gateway
       containers:
       - name: thanos
-        image: improbable/thanos:v0.5.0
+        image: quay.io/thanos/thanos:v0.8.1
         args:
         - store
         - --data-dir=/data
