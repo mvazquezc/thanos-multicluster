@@ -61,7 +61,7 @@ spec:
           mountPath: /etc/prometheus/
           readOnly: true
         - name: remote-write-data
-          mountPath: /data
+          mountPath: /data/remote-write-receive-data
       volumes:
       - name: s3-store-credentials
         secret:
